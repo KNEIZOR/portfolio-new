@@ -1,6 +1,7 @@
 {
   "name": "denis-dev-portfolio",
   "private": true,
+  "type": "module",
   "version": "1.0.0",
   "packageManager": "pnpm@11.25.0",
   "engines": { "node": ">=20.19.0" },
@@ -20,3 +21,4 @@
   "dependencies": { "express": "^4.21.2" },
   "devDependencies": { "@types/express": "^4.17.21", "concurrently": "^9.1.2" }
 }
+
