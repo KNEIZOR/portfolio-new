@@ -58,11 +58,9 @@ if (env.production) {
     ? path.resolve(process.cwd(), 'frontend/dist')
     : path.resolve(process.cwd(), '../frontend/dist');
   if (existsSync(frontendDist)) {
-    if (!process.env.VERCEL) {
-      app.use(express.static(frontendDist, { index: false, maxAge: '1h', setHeaders(res, filePath) {
-        if (filePath.includes(path.sep + 'assets' + path.sep)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-      } }));
-    }
+    app.use(express.static(frontendDist, { index: false, maxAge: '1h', setHeaders(res, filePath) {
+      if (filePath.includes(path.sep + 'assets' + path.sep)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } }));
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) return next();
       res.sendFile(path.join(frontendDist, 'index.html'));
