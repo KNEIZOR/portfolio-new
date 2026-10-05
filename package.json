@@ -17,5 +17,6 @@
     "db:studio": "npm --workspace backend run db:studio",
     "start": "npm --workspace backend run start"
   },
+  "dependencies": { "express": "^4.21.2" },
   "devDependencies": { "concurrently": "^9.1.2" }
 }
