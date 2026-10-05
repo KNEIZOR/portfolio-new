@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import * as helmet from 'helmet';
+import type { RequestHandler } from 'express';
 import cookieParser from 'cookie-parser';
 import path from 'node:path';
 import { existsSync } from 'node:fs';
@@ -11,10 +12,12 @@ import { adminRouter } from './routes/admin.js';
 import { blobUploadsRouter } from './routes/blob-uploads.js';
 import { errorHandler, HttpError, notFound } from './middleware/errors.js';
 
+const helmetMiddleware = helmet.default as unknown as (options?: object) => RequestHandler;
+
 export const app = express();
 app.disable('x-powered-by');
 if (env.production) app.set('trust proxy', 1);
-app.use(helmet.default({
+app.use(helmetMiddleware({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
