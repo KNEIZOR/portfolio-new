@@ -67,7 +67,7 @@ export default function App() {
       <Route path="/admin" element={<AdminGate />} />
       <Route path="/admin/projects" element={<AdminGate />} />
       <Route path="/admin/projects/new" element={<AdminGate />} />
-      <Route path="/admin/projects/:projectId/edit" element={<AdminGate />} />
+      <Route path="/admin/projects/:id/edit" element={<AdminGate />} />
       <Route path="/admin/settings" element={<AdminGate />} />
       <Route path="/:locale" element={<SiteFrame />}>
         <Route index element={<HomePage />} />
