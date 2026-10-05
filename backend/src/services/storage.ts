@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { PutObjectCommand, DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { del, put } from '@vercel/blob';
 import sharp from 'sharp';
 import { env } from '../config/env.js';
 import { HttpError } from '../middleware/errors.js';
@@ -66,4 +67,25 @@ class S3Storage implements StorageService {
   }
 }
 
-export const storage: StorageService = env.storageProvider === 's3' ? new S3Storage() : new LocalStorage();
+class VercelBlobStorage implements StorageService {
+  async save(buffer: Buffer, _mime: ImageMime) {
+    const optimized = await optimizedWebp(buffer);
+    const blob = await put('portfolio/' + randomUUID() + extension, optimized, {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'image/webp',
+      cacheControlMaxAge: 31_536_000,
+    });
+    return blob.url;
+  }
+  async remove(url: string) {
+    let host: string;
+    try { host = new URL(url).hostname; } catch { return; }
+    if (!host.endsWith('.blob.vercel-storage.com')) return;
+    await del(url);
+  }
+}
+
+export const storage: StorageService = env.storageProvider === 's3'
+  ? new S3Storage()
+  : env.storageProvider === 'vercel-blob' ? new VercelBlobStorage() : new LocalStorage();

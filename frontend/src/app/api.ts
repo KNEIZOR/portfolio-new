@@ -1,4 +1,5 @@
 import type { Locale, ProjectPayload, PublicProject } from './types';
+import { upload as uploadToBlob } from '@vercel/blob/client';
 
 export class ApiError extends Error {
   constructor(message: string, public status: number, public code?: string, public details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] }) { super(message); this.name = 'ApiError'; }
@@ -35,6 +36,17 @@ export const api = {
   updateProject: (id: string, payload: ProjectPayload) => request<AdminProject>('/admin/projects/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(payload) }),
   deleteProject: (id: string) => request<void>('/admin/projects/' + encodeURIComponent(id), { method: 'DELETE' }),
   upload: async (files: File[]) => {
+    if (import.meta.env.VITE_BLOB_UPLOADS === 'true') {
+      const urls = await Promise.all(files.map(async (file) => {
+        const extension = file.type === 'image/jpeg' ? '.jpg' : file.type === 'image/png' ? '.png' : file.type === 'image/avif' ? '.avif' : '.webp';
+        const blob = await uploadToBlob('portfolio/' + crypto.randomUUID() + extension, file, {
+          access: 'public',
+          handleUploadUrl: '/api/admin/blob-uploads',
+        });
+        return blob.url;
+      }));
+      return { urls };
+    }
     const form = new FormData();
     files.forEach((file) => form.append('files', file));
     return request<{ urls: string[] }>('/admin/uploads', { method: 'POST', body: form });
