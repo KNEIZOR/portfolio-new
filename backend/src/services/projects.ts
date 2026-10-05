@@ -126,7 +126,7 @@ export async function createProject(input: ProjectInput) {
     } });
     await saveRelations(tx, project.id, input);
     return tx.project.findUniqueOrThrow({ where: { id: project.id }, include: projectInclude });
-  });
+  }, { maxWait: 10_000, timeout: 30_000 });
 }
 
 export async function updateProject(id: string, input: ProjectInput) {
@@ -139,7 +139,7 @@ export async function updateProject(id: string, input: ProjectInput) {
     } });
     await saveRelations(tx, id, input);
     return tx.project.findUniqueOrThrow({ where: { id }, include: projectInclude });
-  });
+  }, { maxWait: 10_000, timeout: 30_000 });
 }
 
 export async function getAdminProject(id: string) {

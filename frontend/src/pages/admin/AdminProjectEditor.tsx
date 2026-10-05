@@ -64,11 +64,17 @@ export default function AdminProjectEditor({ onToast }: { onToast: (message: str
     return () => { active = false; };
   }, [id, t]);
 
-  const update = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
-  const updateTranslation = <K extends Exclude<keyof Translation, 'locale'>>(key: K, value: Translation[K]) => setDraft((current) => ({
-    ...current,
-    translations: current.translations.map((item) => item.locale === locale ? { ...item, [key]: value } : item),
-  }));
+  const update = <K extends keyof Draft>(key: K, value: Draft[K]) => {
+    setError('');
+    setDraft((current) => ({ ...current, [key]: value }));
+  };
+  const updateTranslation = <K extends Exclude<keyof Translation, 'locale'>>(key: K, value: Translation[K]) => {
+    setError('');
+    setDraft((current) => ({
+      ...current,
+      translations: current.translations.map((item) => item.locale === locale ? { ...item, [key]: value } : item),
+    }));
+  };
   const translation = draft.translations.find((item) => item.locale === locale) ?? blankTranslation(locale);
   const toPayload = (status: Draft['status'], publishAnyway = false): ProjectPayload => ({
     slug: draft.slug, category: draft.category, year: Number(draft.year), role: draft.role,
@@ -101,6 +107,29 @@ export default function AdminProjectEditor({ onToast }: { onToast: (message: str
   };
 
   const save = async (status: Draft['status'] = draft.status, publishAnyway = false) => {
+    const missingProjectFields = [
+      !draft.slug.trim() && t('admin.slug'),
+      !draft.category.trim() && t('admin.category'),
+      (!Number.isInteger(draft.year) || draft.year < 1990 || draft.year > 2100) && t('admin.year'),
+      !draft.role.trim() && t('admin.role'),
+    ].filter((field): field is string => Boolean(field));
+    if (missingProjectFields.length) {
+      setError(t('admin.invalidFields', { fields: missingProjectFields.join(', ') }));
+      return;
+    }
+    if (status === 'PUBLISHED') {
+      const english = draft.translations.find((item) => item.locale === 'en');
+      const missingEnglishFields = [
+        !english?.title.trim() && t('admin.name'),
+        !english?.shortDescription.trim() && t('admin.shortDescription'),
+        !english?.fullDescription.trim() && t('admin.fullDescription'),
+      ].filter((field): field is string => Boolean(field));
+      if (missingEnglishFields.length) {
+        setLocale('en');
+        setError(t('admin.publishEnglishRequired', { fields: missingEnglishFields.join(', ') }));
+        return;
+      }
+    }
     setSaving(true); setError('');
     try {
       const payload = toPayload(status, publishAnyway);
@@ -112,7 +141,26 @@ export default function AdminProjectEditor({ onToast }: { onToast: (message: str
       if (reason instanceof ApiError && reason.code === 'MISSING_TRANSLATIONS' && !publishAnyway) {
         setError('MISSING_TRANSLATIONS');
       } else if (reason instanceof ApiError && reason.code === 'EN_TRANSLATION_REQUIRED') {
-        setError(t('admin.required'));
+        setLocale('en');
+        const english = draft.translations.find((item) => item.locale === 'en');
+        const missingEnglishFields = [
+          !english?.title.trim() && t('admin.name'),
+          !english?.shortDescription.trim() && t('admin.shortDescription'),
+          !english?.fullDescription.trim() && t('admin.fullDescription'),
+        ].filter((field): field is string => Boolean(field));
+        setError(t('admin.publishEnglishRequired', { fields: missingEnglishFields.join(', ') }));
+      } else if (reason instanceof ApiError && reason.code === 'VALIDATION_ERROR') {
+        const labels: Record<string, string> = {
+          slug: t('admin.slug'), category: t('admin.category'), year: t('admin.year'), role: t('admin.role'),
+          client: t('admin.client'), liveUrl: t('admin.liveUrl'), githubUrl: t('admin.githubUrl'),
+          technologies: t('admin.technologies'), translations: t('admin.translations'), images: t('admin.gallery'),
+        };
+        const fields = Object.keys(reason.details?.fieldErrors ?? {}).map((field) => labels[field] ?? field);
+        setError(fields.length ? t('admin.invalidFields', { fields: fields.join(', ') }) : t('admin.validationError'));
+      } else if (reason instanceof ApiError && reason.code === 'CONFLICT') {
+        setError(t('admin.slugTaken'));
+      } else if (reason instanceof ApiError && reason.code === 'SAVE_TIMEOUT') {
+        setError(t('admin.saveTimeout'));
       } else setError(t('admin.saveError'));
     } finally { setSaving(false); }
   };

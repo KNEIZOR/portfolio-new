@@ -21,6 +21,10 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     res.status(400).json({ error: 'Please check the submitted fields.', code: 'VALIDATION_ERROR', details: error.flatten() });
     return;
   }
+  if (error instanceof Error && 'code' in error && error.code === 'P2028') {
+    res.status(503).json({ error: 'Saving took too long. Please try again.', code: 'SAVE_TIMEOUT' });
+    return;
+  }
   if (error instanceof Error && 'code' in error && error.code === 'P2002') {
     res.status(409).json({ error: 'A project with that slug already exists.', code: 'CONFLICT' });
     return;

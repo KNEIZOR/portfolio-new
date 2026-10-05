@@ -1,7 +1,7 @@
 import type { Locale, ProjectPayload, PublicProject } from './types';
 
 export class ApiError extends Error {
-  constructor(message: string, public status: number, public code?: string) { super(message); this.name = 'ApiError'; }
+  constructor(message: string, public status: number, public code?: string, public details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] }) { super(message); this.name = 'ApiError'; }
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -18,7 +18,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   if (response.status === 204) return undefined as T;
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new ApiError(data.error ?? 'REQUEST_FAILED', response.status, data.code);
+  if (!response.ok) throw new ApiError(data.error ?? 'REQUEST_FAILED', response.status, data.code, data.details);
   return data as T;
 }
 
