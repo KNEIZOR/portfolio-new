@@ -3,7 +3,6 @@
   "framework": "express",
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "npm run build",
-  "outputDirectory": "frontend/dist",
   "functions": {
     "app.ts": {
       "includeFiles": "frontend/dist/**",
