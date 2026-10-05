@@ -1,0 +1,21 @@
+{
+  "name": "denis-dev-portfolio",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@11.25.0",
+  "engines": { "node": ">=20.19.0" },
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm --workspace backend run dev",
+    "dev:web": "npm --workspace frontend run dev",
+    "build": "npm --workspace backend run build && npm --workspace frontend run build",
+    "db:migrate": "npm --workspace backend run db:migrate",
+    "db:dev": "npm --workspace backend run db:dev --",
+    "db:generate": "npm --workspace backend run db:generate",
+    "db:seed": "npm --workspace backend run db:seed",
+    "db:studio": "npm --workspace backend run db:studio",
+    "start": "npm --workspace backend run start"
+  },
+  "devDependencies": { "concurrently": "^9.1.2" }
+}

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+backend/src/generated/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.log
+.playwright-mcp/
+backend/uploads/*
+!backend/uploads/.gitkeep
+.DS_Store

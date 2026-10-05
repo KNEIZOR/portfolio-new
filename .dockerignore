@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+!.env.example
+**/node_modules
+**/dist
+backend/src/generated
+backend/uploads/**
+!backend/uploads/.gitkeep
+coverage
+.playwright-mcp
+npm-debug.log*
+pnpm-debug.log*
