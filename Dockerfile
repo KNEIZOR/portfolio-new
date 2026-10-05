@@ -24,7 +24,7 @@ ENV VITE_PUBLIC_EMAIL=${VITE_PUBLIC_EMAIL} \
     VITE_PUBLIC_GITHUB_URL=${VITE_PUBLIC_GITHUB_URL} \
     VITE_SITE_URL=${VITE_SITE_URL}
 
-RUN pnpm --filter @denis-dev/backend run build \
+RUN DATABASE_URL=postgresql://build:build@localhost:5432/build pnpm --filter @denis-dev/backend run build \
  && pnpm --filter @denis-dev/frontend run build
 
 FROM node:22-bookworm-slim AS production

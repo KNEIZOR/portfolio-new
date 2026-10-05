@@ -62,11 +62,11 @@ export default function App() {
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/admin/*" element={<AdminGate />} />
-      {supportedLocales.map((locale) => <Route key={locale} path={'/' + locale} element={<SiteFrame />}>
+      <Route path="/:locale" element={<SiteFrame />}>
         <Route index element={<HomePage />} />
         <Route path="projects/:slug" element={<ProjectRoute />} />
         <Route path="*" element={<GlobalFallback />} />
-      </Route>)}
+      </Route>
       <Route path="*" element={<GlobalFallback />} />
     </Routes>
   </div>;
