@@ -43,7 +43,7 @@ export const env = {
 if (env.production && env.sessionSecret.length < 32) {
   throw new Error('SESSION_SECRET must be at least 32 characters in production.');
 }
-if (!['local', 's3'].includes(env.storageProvider)) {
+if (!['local', 's3', 'vercel-blob'].includes(env.storageProvider)) {
   throw new Error('STORAGE_PROVIDER must be local, s3, or vercel-blob.');
 }
 if (env.storageProvider === 's3' && !(env.s3Bucket && env.s3AccessKeyId && env.s3SecretAccessKey && env.s3PublicBaseUrl)) {
