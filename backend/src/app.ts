@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
+import * as helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import path from 'node:path';
 import { existsSync } from 'node:fs';
@@ -14,7 +14,7 @@ import { errorHandler, HttpError, notFound } from './middleware/errors.js';
 export const app = express();
 app.disable('x-powered-by');
 if (env.production) app.set('trust proxy', 1);
-app.use(helmet({
+app.use(helmet.default({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
