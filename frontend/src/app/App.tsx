@@ -61,7 +61,14 @@ export default function App() {
     {preloading && <Preloader onDone={() => setPreloading(false)} />}
     <Routes>
       <Route path="/" element={<RootRedirect />} />
-      <Route path="/admin/*" element={<AdminGate />} />
+      {/* Keep admin URLs more specific than /:locale/projects/:slug below.
+          Otherwise React Router can interpret "admin" as a locale and show
+          the public 404 for routes such as /admin/projects/new. */}
+      <Route path="/admin" element={<AdminGate />} />
+      <Route path="/admin/projects" element={<AdminGate />} />
+      <Route path="/admin/projects/new" element={<AdminGate />} />
+      <Route path="/admin/projects/:projectId/edit" element={<AdminGate />} />
+      <Route path="/admin/settings" element={<AdminGate />} />
       <Route path="/:locale" element={<SiteFrame />}>
         <Route index element={<HomePage />} />
         <Route path="projects/:slug" element={<ProjectRoute />} />
