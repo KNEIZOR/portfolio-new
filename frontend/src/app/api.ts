@@ -2,7 +2,11 @@ import type { Locale, ProjectPayload, PublicProject } from './types';
 import { upload as uploadToBlob } from '@vercel/blob/client';
 
 export class ApiError extends Error {
-  constructor(message: string, public status: number, public code?: string, public details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] }) { super(message); this.name = 'ApiError'; }
+  constructor(message: string, public status: number, public code?: string, public details?: {
+    fieldErrors?: Record<string, string[]>;
+    formErrors?: string[];
+    issues?: { path: string[]; message: string }[];
+  }) { super(message); this.name = 'ApiError'; }
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {

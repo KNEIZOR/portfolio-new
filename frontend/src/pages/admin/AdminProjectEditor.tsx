@@ -160,7 +160,21 @@ export default function AdminProjectEditor({ onToast }: { onToast: (message: str
           client: t('admin.client'), liveUrl: t('admin.liveUrl'), githubUrl: t('admin.githubUrl'),
           technologies: t('admin.technologies'), translations: t('admin.translations'), images: t('admin.gallery'),
         };
-        const fields = Object.keys(reason.details?.fieldErrors ?? {}).map((field) => labels[field] ?? field);
+        const translationLabels: Record<string, string> = {
+          title: t('admin.name'), shortDescription: t('admin.shortDescription'), fullDescription: t('admin.fullDescription'),
+          challenge: t('admin.challenge'), solution: t('admin.solution'), technicalApproach: t('admin.technicalApproach'),
+          seoTitle: t('admin.seoTitle'), seoDescription: t('admin.seoDescription'), features: t('admin.features'),
+        };
+        const issues = reason.details?.issues ?? [];
+        const fields = issues.length ? issues.slice(0, 3).map(({ path, message }) => {
+          if (path[0] === 'translations' && path[1] !== undefined && path[2]) {
+            const translationLocale = draft.translations[Number(path[1])]?.locale;
+            const localeLabel = translationLocale ? localeNames[translationLocale] : path[1];
+            return `${t('admin.translations')} (${localeLabel}) — ${translationLabels[path[2]] ?? path[2]}: ${message}`;
+          }
+          const root = path[0] ?? 'form';
+          return `${labels[root] ?? root}: ${message}`;
+        }) : Object.keys(reason.details?.fieldErrors ?? {}).map((field) => labels[field] ?? field);
         setError(fields.length ? t('admin.invalidFields', { fields: fields.join(', ') }) : t('admin.validationError'));
       } else if (reason instanceof ApiError && reason.code === 'CONFLICT') {
         setError(t('admin.slugTaken'));

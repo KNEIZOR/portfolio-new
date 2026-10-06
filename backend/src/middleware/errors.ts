@@ -18,7 +18,14 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     return;
   }
   if (error instanceof ZodError) {
-    res.status(400).json({ error: 'Please check the submitted fields.', code: 'VALIDATION_ERROR', details: error.flatten() });
+    res.status(400).json({
+      error: 'Please check the submitted fields.',
+      code: 'VALIDATION_ERROR',
+      details: {
+        ...error.flatten(),
+        issues: error.issues.map((issue) => ({ path: issue.path.map(String), message: issue.message })),
+      },
+    });
     return;
   }
   if (error instanceof Error && 'code' in error && error.code === 'P2028') {
