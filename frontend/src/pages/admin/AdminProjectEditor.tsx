@@ -42,6 +42,7 @@ export default function AdminProjectEditor({ onToast }: { onToast: (message: str
   const [loading, setLoading] = useState(Boolean(id));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -85,15 +86,19 @@ export default function AdminProjectEditor({ onToast }: { onToast: (message: str
 
   const upload = async (files: File[], target: 'cover' | 'gallery') => {
     if (!files.length) return;
-    setUploading(true); setError('');
+    setUploading(true); setUploadProgress(0); setError('');
     try {
-      const result = await api.upload(target === 'cover' ? files.slice(0, 1) : files);
+      const result = await api.upload(target === 'cover' ? files.slice(0, 1) : files, setUploadProgress);
       if (target === 'cover') update('coverImage', result.urls[0] ?? '');
       else update('images', [...draft.images, ...result.urls.map((imageUrl) => ({ imageUrl, alt: { en: '', ru: '', hy: '' } }))]);
       onToast(t('admin.uploadedToast'));
-    } catch {
-      setError(t('admin.uploadError'));
-    } finally { setUploading(false); }
+    } catch (reason) {
+      if (reason instanceof DOMException && (reason.name === 'TimeoutError' || reason.name === 'AbortError')) {
+        setError(t('admin.uploadError') + ' (timeout)');
+      } else {
+        setError(reason instanceof Error ? t('admin.uploadError') + ' ' + reason.message : t('admin.uploadError'));
+      }
+    } finally { setUploading(false); setUploadProgress(0); }
   };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>, target: 'cover' | 'gallery') => {
@@ -232,7 +237,7 @@ export default function AdminProjectEditor({ onToast }: { onToast: (message: str
               <input aria-label={t('admin.altText') + ' ' + localeNames[locale]} placeholder={t('admin.altText')} value={image.alt[locale]} onChange={(event) => update('images', draft.images.map((item, itemIndex) => itemIndex === index ? { ...item, alt: { ...item.alt, [locale]: event.target.value } } : item))} />
               <div className="admin-image-item__actions"><button type="button" aria-label={t('admin.moveLeft')} disabled={index === 0} onClick={() => moveImage(index, index - 1)}>←</button><button type="button" aria-label={t('admin.moveRight')} disabled={index === draft.images.length - 1} onClick={() => moveImage(index, index + 1)}>→</button><button type="button" aria-label={t('admin.removeImage')} onClick={() => update('images', draft.images.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>
             </div>)}</div>
-          </div><input ref={fileInput} className="visually-hidden" multiple type="file" accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif" onChange={(event) => handleFileChange(event, 'gallery')} /><small>{uploading ? t('admin.uploading') : t('admin.uploadHint')}</small>
+          </div><input ref={fileInput} className="visually-hidden" multiple type="file" accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif" onChange={(event) => handleFileChange(event, 'gallery')} /><small aria-live="polite">{uploading ? t('admin.uploading') + ' ' + uploadProgress + '%' : t('admin.uploadHint')}</small>
         </div>
       </div>
     </section>

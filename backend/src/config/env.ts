@@ -17,6 +17,10 @@ const vercelOrigin = process.env.VERCEL_PROJECT_PRODUCTION_URL
 const publicOrigin = process.env.PUBLIC_ORIGIN ?? vercelOrigin ?? 'http://localhost:5173';
 const origins = (process.env.ALLOWED_ORIGINS ?? publicOrigin)
   .split(',').map((value) => value.trim()).filter(Boolean);
+const configuredStorageProvider = process.env.STORAGE_PROVIDER;
+const storageProvider = process.env.VERCEL && (!configuredStorageProvider || configuredStorageProvider === 'local')
+  ? 'vercel-blob'
+  : configuredStorageProvider ?? 'local';
 
 export const env = {
   nodeEnv,
@@ -30,7 +34,7 @@ export const env = {
   allowedOrigins: origins,
   uploadDir: path.resolve(process.cwd(), process.env.UPLOAD_DIR ?? './uploads'),
   maxUploadMb: Number(process.env.MAX_UPLOAD_MB ?? 12),
-  storageProvider: process.env.STORAGE_PROVIDER ?? 'local',
+  storageProvider,
   s3Endpoint: process.env.S3_ENDPOINT || undefined,
   s3Region: process.env.S3_REGION ?? 'auto',
   s3Bucket: process.env.S3_BUCKET,

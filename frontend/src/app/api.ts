@@ -35,21 +35,38 @@ export const api = {
   createProject: (payload: ProjectPayload) => request<AdminProject>('/admin/projects', { method: 'POST', body: JSON.stringify(payload) }),
   updateProject: (id: string, payload: ProjectPayload) => request<AdminProject>('/admin/projects/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(payload) }),
   deleteProject: (id: string) => request<void>('/admin/projects/' + encodeURIComponent(id), { method: 'DELETE' }),
-  upload: async (files: File[]) => {
+  upload: async (files: File[], onProgress?: (percentage: number) => void) => {
     if (import.meta.env.VITE_BLOB_UPLOADS === 'true') {
-      const urls = await Promise.all(files.map(async (file) => {
+      const bytesByFile = files.map(() => 0);
+      const totalBytes = files.reduce((total, file) => total + file.size, 0);
+      const reportProgress = () => {
+        if (!totalBytes) return;
+        onProgress?.(Math.min(99, Math.round(bytesByFile.reduce((total, bytes) => total + bytes, 0) / totalBytes * 100)));
+      };
+      const urls = await Promise.all(files.map(async (file, index) => {
         const extension = file.type === 'image/jpeg' ? '.jpg' : file.type === 'image/png' ? '.png' : file.type === 'image/avif' ? '.avif' : '.webp';
         const blob = await uploadToBlob('portfolio/' + crypto.randomUUID() + extension, file, {
           access: 'public',
           handleUploadUrl: '/api/admin/blob-uploads',
+          multipart: file.size > 5 * 1024 * 1024,
+          abortSignal: AbortSignal.timeout(90_000),
+          onUploadProgress: ({ percentage }) => {
+            bytesByFile[index] = file.size * percentage / 100;
+            reportProgress();
+          },
         });
+        bytesByFile[index] = file.size;
+        reportProgress();
         return blob.url;
       }));
+      onProgress?.(100);
       return { urls };
     }
     const form = new FormData();
     files.forEach((file) => form.append('files', file));
-    return request<{ urls: string[] }>('/admin/uploads', { method: 'POST', body: form });
+    const result = await request<{ urls: string[] }>('/admin/uploads', { method: 'POST', body: form, signal: AbortSignal.timeout(90_000) });
+    onProgress?.(100);
+    return result;
   },
   reorderImages: (id: string, imageIds: string[]) => request<void>('/admin/projects/' + encodeURIComponent(id) + '/images/order', { method: 'PATCH', body: JSON.stringify({ imageIds }) }),
 };

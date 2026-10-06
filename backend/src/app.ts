@@ -25,7 +25,7 @@ app.use(helmetMiddleware({
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'", 'https://*.blob.vercel-storage.com'],
+      connectSrc: ["'self'", 'https://vercel.com', 'https://*.blob.vercel-storage.com'],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       frameAncestors: ["'none'"],
