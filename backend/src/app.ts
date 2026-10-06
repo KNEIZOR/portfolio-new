@@ -61,8 +61,10 @@ if (env.production) {
     app.use(express.static(frontendDist, { index: false, maxAge: '1h', setHeaders(res, filePath) {
       if (filePath.includes(path.sep + 'assets' + path.sep)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     } }));
+    app.use('/assets', (_req, res) => res.status(404).type('text/plain').send('Asset not found'));
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) return next();
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.sendFile(path.join(frontendDist, 'index.html'));
     });
   }
